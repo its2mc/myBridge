@@ -1,0 +1,11 @@
+---
+applications:
+- name: myBridge
+  memory: 256M
+  instances: 1
+  host: myBridge
+  path: .
+  command: node bridge.js
+  buildpack: https://github.com/cloudfoundry/buildpack-nodejs.git
+
+

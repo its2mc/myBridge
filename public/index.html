@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="style.css" rel="stylesheet" />
+<script src="jquery.min.js"></script>
+<script>
+	var readMsg = function(msg) {
+		var temp = JSON.parse(msg);
+		console.log(msg);
+		return temp;
+	};
+
+	var wsUri = "wss://mybridge.mybluemix.net:443";
+	var localStream;
+	var remoteStream;
+	var activeApp = "";
+	var userList = [];
+	var pc;
+	websocket = new WebSocket(wsUri);
+
+	$()
+			.ready(
+					function() {
+						function myAlert(msg) {
+							$(".newsBanner").html("Console: " + msg);
+						}
+
+						function sendCmdMsg(cmd, chnlId, password) {
+							temp = {
+								command : cmd,
+								channelId : chnlId,
+								pass : password
+							};
+							return websocket.send(JSON.stringify(temp));
+						}
+
+						function sendMsg(chnlId, password, data_temp) {
+							temp = {
+								channelId : chnlId,
+								pass : password,
+								data : data_temp
+							};
+							return websocket.send(JSON.stringify(temp));
+						}
+
+						//This part handles the websocket Connection
+						websocket.onopen = function(evt) {
+							myAlert("Connected to Websocket Server");
+						};
+
+						websocket.onclose = function(evt) {
+							myAlert("Connection to Websocket closed");
+						};
+
+						websocket.onmessage = function(evt) {
+							var temp = readMsg(evt.data);
+							switch (activeApp) {
+							case "chatApp":
+								if (temp.command) {
+									if (temp.command === "newUser")
+										myAlert(temp.userIP);
+									else
+										$("#board").append(
+												temp.id + ">>>" + temp.msg
+														+ "</br>");
+								} else {
+									$("#board").append("Error!</br>");
+								}
+								break;
+
+							case "vidApp":
+								//								if (!pc)
+								//									start();
+								var message = temp.data;
+								if (message.sdp)
+									pc
+											.setRemoteDescription(
+													new RTCSessionDescription(
+															message.sdp),
+													function() {
+														// if we received an offer, we need to answer
+														if (pc.remoteDescription.type == 'offer')
+															pc
+																	.createAnswer(
+																			localDescCreated,
+																			logError);
+													}, logError);
+								else
+									pc.addIceCandidate(new RTCIceCandidate(
+											message.candidate));
+								break;
+
+							case "audioApp":
+								//								if (!pc)
+								//									start();
+								var message = temp.data;
+								if (message.sdp)
+									pc
+											.setRemoteDescription(
+													new RTCSessionDescription(
+															message.sdp),
+													function() {
+														// if we received an offer, we need to answer
+														if (pc.remoteDescription.type == 'offer')
+															pc
+																	.createAnswer(
+																			localDescCreated,
+																			logError);
+													}, logError);
+								else
+									pc.addIceCandidate(new RTCIceCandidate(
+											message.candidate));
+								break;
+
+							}
+						};
+
+						websocket.onerror = function(evt) {
+							myAlert("Error-->" + evt.data);
+						};
+
+						myAlert("Chat app is starting");
+
+						$("#quit").click(function() {
+							myAlert("Quitting from server");
+							websocket.close();
+						});
+
+						$("#sendMsg").click(
+								function() {
+									var chnlId = $("#channelId").val();
+									var pass = $("#pass").val();
+									var msg = $("#msg").val();
+									var myId = $("#myId").val();
+									$("#board").append(
+											"You >>>" + msg + "</br>");
+									var temp = '{"command":"msg","msg":"' + msg
+											+ '","id":"' + myId + '"}';
+									sendMsg(chnlId, pass, temp);
+								});
+
+						$("#createChannel").click(function() {
+							var chnlId = $("#channelId").val();
+							var pass = $("#pass").val();
+							var cmd = "createChannel";
+							sendCmdMsg(cmd, chnlId, pass);
+							myAlert("Creating Channel");
+						});
+
+						$("#subscribe").click(function() {
+							var chnlId = $("#channelId").val();
+							var pass = $("#pass").val();
+							var cmd = "subscribe";
+							sendCmdMsg(cmd, chnlId, pass);
+							myAlert("Subscribing");
+						});
+
+						$("#unsubscribe").click(function() {
+							var chnlId = $("#channelId").val();
+							var pass = $("#pass").val();
+							var cmd = "unsubscribe";
+							sendCmdMsg(cmd, chnlId, pass)
+							myAlert("Unsubscribing");
+						});
+
+						$("#chatAppBtn").click(function() {
+							$("#vidApp").css("display", "none");
+							$("#chatApp").css("display", "block");
+							$("#audioApp").css("display", "none");
+							$("#extra").css("display", "none");
+							activeApp = "chatApp";
+						});
+
+						$("#vidAppBtn").click(function() {
+							$("#vidApp").css("display", "block");
+							$("#chatApp").css("display", "none");
+							$("#audioApp").css("display", "none");
+							$("#extra").css("display", "none");
+							activeApp = "vidApp";
+						});
+
+						$("#audioAppBtn").click(function() {
+							$("#vidApp").css("display", "none");
+							$("#chatApp").css("display", "none");
+							$("#audioApp").css("display", "block");
+							$("#extra").css("display", "none");
+							activeApp = "audioApp";
+						});
+
+						//Video App Part
+						var video = $("#localVid")[0];
+						var remote = $("#remoteA")[0];
+						var configuration = {
+							'iceServers' : [ {
+								'url' : 'stun:stun.example.org'
+							} ]
+						};
+
+						var videoObject = "";
+
+						$("#startVid")
+								.click(
+										function() {
+											navigator.getUserMedia = (navigator.getUserMedia
+													|| navigator.webkitGetUserMedia
+													|| navigator.mozGetUserMedia || navigator.msGetUserMedia);
+
+											if (navigator.getUserMedia) {
+												navigator
+														.getUserMedia(
+																{
+																	video : true,
+																	audio : true
+																},
+																function(stream) {
+																	localStream = stream;
+																	video.src = window.URL
+																			.createObjectURL(stream);
+																},
+																// Error Callback
+																function(e) {
+																	// Log the error to the console.
+																	console
+																			.log('Denied: '
+																					+ err);
+																});
+
+											} else {
+												console.log('Not supported!');
+											}
+
+										});
+
+						$("#startConn")
+								.click(
+										function() {
+											var chnlId = $("#channelId").val();
+											var pass = $("#pass").val();
+											var msg = $("#msg").val();
+											var myId = $("#myId").val();
+
+											try {
+												pc = new RTCPeerConnection(
+														configuration);
+												var msg = {
+													id : myId,
+													data : ''
+												}
+												// send any ice candidates to the other peer
+												pc.onicecandidate = function(
+														evt) {
+													if (evt.candidate)
+														msg.data = {
+															'candidate' : evt.candidate
+														};
+													sendMsg(JSON.stringify(msg));
+												};
+
+												// once remote stream arrives, show it in the remote video element
+												pc.onaddstream = function(evt) {
+													remote.src = URL
+															.createObjectURL(evt.stream);
+												};
+
+												pc.addStream(localStream);
+
+												function localDescCreated(desc) {
+													pc
+															.setLocalDescription(
+																	desc,
+																	function() {
+																		signalingChannel
+																				.send(JSON
+																						.stringify({
+																							'sdp' : pc.localDescription
+																						}));
+																	}, logError);
+												}
+
+												signalingChannel.onmessage = function(
+														evt) {
+
+												};
+											} catch (e) {
+												console.log("Error: " + e)
+											}
+
+										});
+
+						$("#stopVid").click(function() {
+							localStream = "";
+						});
+
+						$("#stopConn").click(function() {
+
+						});
+
+					});
+</script>
+<title>MyConnect</title>
+</head>
+<body>
+	<div class="body">
+		<div class="header">My Connect</div>
+		<div class="newsBanner">Console: Welcome</div>
+		<div class="dashBoard">
+			<div class="btnList">
+				<ul id="cmdList">
+					<li id="createChannel">Create Channel</li>
+					<li id="subscribe">Subscribe</li>
+					<li id="unsubscribe">Unsubscribe</li>
+					<li id="apps">Applications</li>
+					<ul>
+						<li id="chatAppBtn">Chat Application</li>
+						<li id="vidAppBtn">Video Application</li>
+						<li id="audioAppBtn">Audio Application</li>
+					</ul>
+				</ul>
+			</div>
+			<div class="btnBoard">
+				<p>
+					Channel ID: <input type=text id="channelId" />
+				</p>
+				<p>
+					Channel Password: <input type="password" id="pass" />
+				</p>
+				<p>
+					my Id: <input type="text" id="myId" />
+				</p>
+			</div>
+		</div>
+		<div class="appBoard">
+			<div id="chatApp">
+				<div class="controller">
+					<button id="sendMsg">Send Message</button>
+					<textarea id="msg"></textarea>
+					<div style=""></div>
+				</div>
+				<div id="board"
+					style="background-color: black; color: white; width: 500px; height: 500px; padding: 5px; overflow: scroll;">
+					Welcome to myNodejsChatApp</br>
+				</div>
+			</div>
+
+			<div id="vidApp">
+				<div class="videoCont">
+					<div class="controller">
+						<button id="startVid">Start Video</button>
+						<button id="startConn">Start Stream</button>
+						<button id="stopVid">Stop Video</button>
+						<button id="stopConn">Stop Stream</button>
+						<div style=""></div>
+					</div>
+					<video id="localVid" width="320" height="240" controls autoplay>
+					</video>
+				</div>
+
+				<div class="videoCont">
+					<video id="remoteA" width="320" height="240" controls autoplay>
+					</video>
+				</div>
+				<!-- 			<div class="videoCont">
+					<video id="source" width="320" height="240" controls autoplay>
+					</video> -->
+			</div>
+			<div style=""></div>
+		</div>
+
+		<div id="audioApp">
+			<div class="controller">
+				<button id="startAudio">Start Audio</button>
+				<button id="startConn">Start Stream</button>
+				<button id="stopAudio">Stop Audio</button>
+				<button id="stopConn">Stop Stream</button>
+				<div style=""></div>
+			</div>
+		</div>
+
+		<div id="extra"></div>
+	</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,139 @@
+html {
+	font-family: sans-serif;
+	-webkit-text-size-adjust: 100%;
+	-ms-text-size-adjust: 100%
+}
+
+body {
+	background-color: grey;
+}
+
+.body {
+	width: 900px;
+	margin: auto;
+	background-color: rgb(238, 235, 235);
+	border: 2px solid white;
+}
+
+.header {
+	background-color: rgb(21, 26, 82);
+	height: 90px;
+	padding: 3px;
+	color: white;
+}
+
+.newsBanner {
+	background-color: white;
+	height: 30px;
+	padding-top: 5px;
+}
+
+.dashBoard {
+	background-color: rgb(17, 95, 139);
+	height: 300px;
+	color: white;
+	padding: 2px;
+}
+
+.appBoard {
+	padding: 2px;
+	min-height:600px;
+}
+
+.btnList {
+	width: 40%;
+	height: 100%;
+	float: left;
+}
+
+.btnList ul {
+	border: 1px solid white;
+}
+
+.btnList ul li {
+	border: 2px solid rgb(10, 24, 99);
+	background-color: rgb(194, 191, 191);
+	color: rgb(10, 24, 99);
+	font-size: 22px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	padding-left: 5px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	list-style-type: none;
+}
+
+.btnList ul li:hover {
+	background-color: white;
+}
+
+.btnList ul li:click {
+	background-color: white;
+	color: rgb(70, 81, 145);
+}
+
+.btnBoard {
+	width: 55%;
+	height: 100%;
+	float: left;
+	padding: 5px;
+}
+
+.vidCont{
+	
+}
+
+button {
+	border: 2px solid #069;
+	color: #003;
+	width: 50px;
+	height: 50px;
+	float: left;
+	background-color: white;
+	margin-right: 5px;
+}
+
+textarea {
+	width: auto;
+	height: 55px;
+	width: 265px;
+	float: left;
+	margin-right: 5px;
+	resize: none;
+}
+
+.controller {
+	display: block;
+	border: 2px solid #333;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	padding: 5px;
+	height: 60px;
+}
+
+#msg {
+	color: #036;
+}
+
+#vidApp{
+	display:none;
+}
+
+#chatApp{
+	display:none;
+}
+
+#audioApp{
+	display:none;
+}
+
+#extra{
+	display:none;
+}
+
+.videoCont {
+	height:260px;
+	width:330px;
+	float:left;
+	margin:5px;
+}
